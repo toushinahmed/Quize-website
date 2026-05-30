@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Colorful Timed Quiz</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .quiz-container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+    h2 { color: #444; margin-bottom: 20px; }
+    .option { margin: 12px 0; text-align: left; }
+    .option input { margin-right: 8px; }
+    #timer { font-size: 20px; font-weight: bold; color: #e63946; margin-bottom: 15px; }
+    #progressBar { width: 100%; background-color: #ddd; border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
+    #progress { height: 15px; background: linear-gradient(90deg, #06beb6, #48b1bf); width: 100%; transition: width 1s linear; }
+    button { margin-top: 20px; padding: 12px 20px; background: linear-gradient(135deg, #ff6a00, #ee0979); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
+    button:hover { transform: scale(1.05); }
+    #result { margin-top: 25px; font-weight: bold; font-size: 20px; color: #333; }
+    input[type="text"] { padding: 10px; width: 80%; border: 2px solid #ccc; border-radius: 8px; margin-top: 15px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <!-- Welcome Screen -->
+  <div class="quiz-container" id="welcomeScreen">
+    <h2>👋 Hey I am Toushin</h2>
+    <p>Enter your name to start the quiz:</p>
+    <input type="text" id="playerName" placeholder="Your Name">
+    <br>
+    <button onclick="startQuiz()">Start Quiz 🚀</button>
+  </div>
+
+  <!-- Quiz Screen -->
+  <div class="quiz-container" id="quizScreen" style="display:none;">
+    <h2>🌟 Timed Quiz 🌟</h2>
+    <div id="timer">Time left: 10s</div>
+    <div id="progressBar"><div id="progress"></div></div>
+    <div id="quiz"></div>
+    <button onclick="nextQuestion()">Next ➡️</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const questions = [
+      // Dhaka University
+      { question: "নিচের কোনটিতে একিনিটি এবং হেটারোসিস্ট পাওয়া যায়?", options: ["Escherichia","Nostoc","Zygnema","Chlorella"], answer: "Nostoc" },
+      { question: "নিচের কোনটিতে হরমোগোনিয়া থাকে?", options: ["Sargassum","Oscillatoria","Volvox","Zygnema"], answer: "Oscillatoria" },
+      { question: "কোনটি সিনোসাইটিক শৈবালের উদাহরণ?", options: ["Ulothrix","Botrydium","Nostoc","Polysiphonia"], answer: "Botrydium" },
+      { question: "নিচের কোনটিতে সি-ফাইকোসায়ানিন থাকে?", options: ["Spirogyra","Nostoc","Oedogonium","Ulothrix"], answer: "Nostoc" },
+      { question: "নিচের কোনটিতে হোল্ডফাস্ট আছে?", options: ["Chlamydomonas","Ulothrix","Pyrobotrys","Volvox"], answer: "Ulothrix" },
+
+      // Jahangirnagar University
+      { question: "কোনটি লোহিত শৈবাল?", options: ["Boehmeria nivea","Bangiomorpha pubescens","Pandorina pubescens","Botrydium granulatum"], answer: "Bangiomorpha pubescens" },
+      { question: "Pandorina এর বৈশিষ্ট্য কোনটি?", options: ["সচল এককোষী","নিশ্চল এককোষী","সচল কলোনিয়াল","বহুকোষী ফিলামেন্টাস"], answer: "সচল কলোনিয়াল" },
+      { question: "Caulerpa এর ক্লোরোপ্লাস্টের আকৃতি কেমন?", options: ["তারকাকৃতির","গার্ডল আকৃতির","জালিকাকৃতির","থালাকৃতি"], answer: "থালাকৃতি" },
+      { question: "Chrysolaminarin কার সঞ্চিত খাদ্য?", options: ["Navicula","Gymnodinium","Ulothrix","Polysiphonia"], answer: "Navicula" },
+      { question: "কোনটি Phaeophyta-এর সঞ্চিত খাদ্য নয়?", options: ["Laminarin","Chrysolaminarin","Mannitol","Algin"], answer: "Chrysolaminarin" },
+      { question: "ক্যারাজীনান কোন শৈবালের সঞ্চিত খাদ্য?", options: ["Chlamydomonas","Sargassum","Polysiphonia","Chara"], answer: "Polysiphonia" },
+      { question: "শৈবালের সিলিকাময় কোষপ্রাচীরকে কী বলে?", options: ["সিনোবিয়াম","ফ্রুস্টিউল","ক্যারাজীনান","পাইরিনয়েড"], answer: "ফ্রুস্টিউল" },
+      { question: "'রেড টাইড' এর সাথে সংশ্লিষ্ট-", options: ["Phaeophyta","Rhodophyta","Pyrrophyta","Chrysophyta"], answer: "Pyrrophyta" },
+      { question: "শৈবালের সঞ্চিত খাদ্য নয়-", options: ["প্যারামাইলন","ম্যানিটল","ল্যামিনারিন","ভলিউটিন"], answer: "ভলিউটিন" },
+      { question: "Pithophora এর স্পোর-", options: ["অ্যাপ্লানোস্পোর","হিপনোস্পোর","অক্সোস্পোর","অ্যাকাইনিটি"], answer: "অ্যাকাইনিটি" }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 10;
+    let playerName = "";
+
+    function startQuiz() {
+      playerName = document.getElementById("playerName").value.trim();
+      if (playerName === "") {
+        alert("Please enter your name!");
+        return;
+      }
+      document.getElementById("welcomeScreen").style.display = "none";
+      document.getElementById("quizScreen").style.display = "block";
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      clearInterval(timer);
+      timeLeft = 10;
+      document.getElementById("timer").textContent = `Time left: ${timeLeft}s`;
+      document.getElementById("progress").style.width = "100%";
+      timer = setInterval(updateTimer, 1000);
+
+      const quizDiv = document.getElementById("quiz");
+      quizDiv.innerHTML = `<p><strong>${currentQuestion + 1}. ${questions[currentQuestion].question}</strong></p>`;
+      questions[currentQuestion].options.forEach(opt => {
+        quizDiv.innerHTML += `
+          <div class="option">
+            <input type="radio" name="answer" value="${opt}">
+            <label>${opt}</label>
+          </div>
+        `;
+      });
+    }
+
+    function updateTimer() {
+      timeLeft--;
+      document.getElementById("timer").textContent = `Time left: ${timeLeft}s`;
+      document.getElementById("progress").style.width = `${(timeLeft/10)*100}%`;
+      if (timeLeft <= 0) {
+        nextQuestion();
+      }
+    }
+
+    function nextQuestion() {
+      checkAnswer();
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        loadQuestion();
+      } else {
+        endQuiz();
+      }
+    }
+
+    function checkAnswer() {
+      const selected = document.querySelector(`input[name="answer"]:checked`);
+      if (selected && selected.value === questions[currentQuestion].answer) {
+        score++;
+      }
+    }
+
+    function endQuiz() {
+      clearInterval(timer);
+      document.getElementById("quiz").innerHTML = "";
+      document.getElementById("timer").textContent = "";
+      document.getElementById("progressBar").style.display = "none";
+      document.getElementById("result").innerHTML = `
+        🎉 Well done, <strong>${playerName}</strong>!<br>
+        You scored ${score} out of ${questions.length}<br><br>
+        <button onclick="restartQuiz()">🔄 Play Again</button>
+      `;
+    }
+
+    function restartQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      document.getElementById("progressBar").style.display = "block";
+      document.getElementById("result").innerHTML = "";
+      loadQuestion();
+    }
+  </script>
+</body>
+</html>
+        score
+
+</body>
+</html>
+        
