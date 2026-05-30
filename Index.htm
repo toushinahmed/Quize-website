@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Colorful Timed Quiz</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .quiz-container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+        }
+        h2 {
+            color: #444;
+            margin-bottom: 20px;
+        }
+        .option {
+            margin: 12px 0;
+            text-align: left;
+        }
+        .option input {
+            margin-right: 8px;
+        }
+        #timer {
+            font-size: 20px;
+            font-weight: bold;
+            color: #e63946;
+            margin-bottom: 15px;
+        }
+        #progressBar {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        #progress {
+            height: 15px;
+            background: linear-gradient(90deg, #06beb6, #48b1bf);
+            width: 100%;
+            transition: width 1s linear;
+        }
+        button {
+            margin-top: 20px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #ff6a00, #ee0979);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        #result {
+            margin-top: 25px;
+            font-weight: bold;
+            font-size: 20px;
+            color: #333;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h2>🌟 Timed Quiz 🌟</h2>
+        <div id="timer">Time left: 10s</div>
+        <div id="progressBar"><div id="progress"></div></div>
+        <div id="quiz"></div>
+        <button onclick="nextQuestion()">Next ➡️</button>
+        <div id="result"></div>
+    </div>
+
+    <!-- সাউন্ড ফাইল -->
+    <audio id="correctSound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
+    <audio id="wrongSound" src="https://www.soundjay.com/button/beep-10.wav"></audio>
+    <audio id="timeUpSound" src="https://www.soundjay.com/button/beep-05.wav"></audio>
+
+    <script>
+        const questions = [
+            {
+                question: "Which planet is known as the Red Planet?",
+                options: ["Mars", "Venus", "Jupiter", "Saturn"],
+                answer: "Mars"
+            },
+            {
+                question: "What is the capital of France?",
+                options: ["Berlin", "Madrid", "Paris", "Rome"],
+                answer: "Paris"
+            },
+            {
+                question: "Which gas do plants absorb from the atmosphere?",
+                options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"],
+                answer: "Carbon Dioxide"
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let timer;
+        let timeLeft = 10;
+
+        function loadQuestion() {
+            clearInterval(timer);
+            timeLeft = 10;
+            document.getElementById("timer").textContent = `Time left: ${timeLeft}s`;
+            document.getElementById("progress").style.width = "100%";
+            timer = setInterval(updateTimer, 1000);
+
+            const quizDiv = document.getElementById("quiz");
+            quizDiv.innerHTML = `<p><strong>${currentQuestion + 1}. ${questions[currentQuestion].question}</strong></p>`;
+            questions[currentQuestion].options.forEach(opt => {
+                quizDiv.innerHTML += `
+                    <div class="option">
+                        <input type="radio" name="answer" value="${opt}">
+                        <label>${opt}</label>
+                    </div>
+                `;
+            });
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            document.getElementById("timer").textContent = `Time left: ${timeLeft}s`;
+            document.getElementById("progress").style.width = `${(timeLeft/10)*100}%`;
+            if (timeLeft <= 0) {
+                document.getElementById("timeUpSound").play();
+                nextQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            checkAnswer();
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                loadQuestion();
+            } else {
+                endQuiz();
+            }
+        }
+
+        function checkAnswer() {
+            const selected = document.querySelector(`input[name="answer"]:checked`);
+            if (selected) {
+                if (selected.value === questions[currentQuestion].answer) {
+                    score++;
+                    document.getElementById("correctSound").play();
+                } else {
+                    document.getElementById("wrongSound").play();
+                }
+            }
+        }
+
+        function endQuiz() {
+            clearInterval(timer);
+            document.getElementById("quiz").innerHTML = "";
+            document.getElementById("timer").textContent = "";
+            document.getElementById("progressBar").style.display = "none";
+            document.getElementById("result").innerHTML = `
+                🎉 Quiz finished! You scored ${score} out of ${questions.length}<br><br>
+                <button onclick="restartQuiz()">🔄 Play Again</button>
+            `;
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById("progressBar").style.display = "block";
+            document.getElementById("result").innerHTML = "";
+            loadQuestion();
+        }
+
+        // Start quiz
+        loadQuestion();
+    </script>
+</body>
+</html>
